@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A responsive four-digit PIN deduction game built with Flask and Bootstrap.">
+  <title>PinPoint | Crack the Code</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <nav class="navbar py-3 py-md-4" aria-label="Main navigation">
+    <div class="container-xl px-3 px-md-4">
+      <a class="navbar-brand d-flex align-items-center gap-2 m-0" href="{{ url_for('index') }}" aria-label="PinPoint home">
+        <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+        <span class="brand-name">PIN<span>POINT</span></span>
+      </a>
+      <span class="badge game-status rounded-pill px-3 py-2">
+        <span class="status-dot me-2"></span>
+        <span class="d-none d-sm-inline">Game active</span><span class="d-sm-none">Active</span>
+      </span>
+    </div>
+  </nav>
+
+  <main class="container-xl px-3 px-md-4 pb-4">
+    <div class="row g-4 game-row">
+      <section class="col-lg-7" aria-labelledby="game-title">
+        <div class="card game-card h-100 border-0 shadow-lg">
+          <div class="card-body d-flex flex-column p-4 p-md-5 p-xl-6">
+            <div>
+              <span class="badge text-bg-soft rounded-pill mb-3">Logic game · 4 digits</span>
+              <h1 id="game-title" class="display-title mb-3">Can you crack<br>the code?</h1>
+              <p class="lead game-intro mb-4 mb-md-5">Enter a four-digit PIN. After each attempt, you’ll learn how many digits are correct and how many are in the right position.</p>
+            </div>
+
+            {% if message %}
+              <div class="alert {% if message_kind == 'success' %}alert-success{% else %}alert-danger{% endif %} d-flex align-items-center gap-3 border-0" role="alert">
+                <span class="alert-symbol flex-shrink-0" aria-hidden="true">{% if message_kind == 'success' %}✓{% else %}!{% endif %}</span>
+                <span>{{ message }}</span>
+              </div>
+            {% endif %}
+
+            {% for f in get_flashed_messages() %}
+              <div class="alert alert-info d-flex align-items-center gap-3 border-0" role="status">
+                <span class="alert-symbol flex-shrink-0" aria-hidden="true">↻</span><span>{{ f }}</span>
+              </div>
+            {% endfor %}
+
+            <form method="post" class="mb-4">
+              <label for="guess" class="form-label fw-bold small">Your guess</label>
+              <div class="row g-2">
+                <div class="col-sm-7">
+                  <input id="guess" class="form-control form-control-lg pin-input h-100" type="text" name="guess" maxlength="4" minlength="4" inputmode="numeric" pattern="[0-9]{4}" autocomplete="off" placeholder="0000" aria-describedby="guess-help" autofocus required>
+                </div>
+                <div class="col-sm-5 d-grid">
+                  <button class="btn btn-dark btn-lg check-button d-flex align-items-center justify-content-center gap-3" type="submit">Check PIN <span aria-hidden="true">→</span></button>
+                </div>
+              </div>
+              <div id="guess-help" class="form-text">Exactly four numbers, including leading zeros.</div>
+            </form>
+
+            <div class="game-footer d-flex align-items-end justify-content-between gap-3 mt-auto pt-4 border-top">
+              <div><span class="meta-label d-block">Attempts</span><strong class="attempt-count">{{ guess_count }}</strong></div>
+              <form action="{{ url_for('restart') }}" method="post">
+                <button class="btn btn-link restart-button text-decoration-none px-0" type="submit"><span aria-hidden="true">↻</span> Start over</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="col-lg-5" aria-labelledby="history-title">
+        <div class="card history-card h-100 border-0 shadow-lg text-white">
+          <div class="card-body d-flex flex-column p-4 p-md-5">
+            <div class="d-flex align-items-start justify-content-between pb-4 border-bottom border-light border-opacity-10">
+              <div><p class="section-label mb-1">This round</p><h2 id="history-title" class="h3 fw-bold mb-0">Guess history</h2></div>
+              <span class="badge history-count rounded-circle d-grid align-items-center">{{ past_guesses|length }}</span>
+            </div>
+
+            {% if past_guesses %}
+              <div class="history-list d-grid gap-2 my-4 pe-1">
+                {% for g in past_guesses %}
+                  <article class="guess-card p-3 rounded-3{% if loop.first %} latest{% endif %}">
+                    <div class="d-flex gap-2 mb-3" aria-label="Guess {{ g.guess }}">
+                      {% for digit in g.guess %}<span class="digit rounded-2 d-grid align-items-center text-center">{{ digit }}</span>{% endfor %}
+                    </div>
+                    <div class="d-flex flex-wrap gap-3 guess-results"><span><strong>{{ g.correct_digits }}</strong> correct</span><span><strong>{{ g.right_place }}</strong> placed</span></div>
+                  </article>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="empty-state d-flex flex-column align-items-center justify-content-center flex-grow-1 text-center py-5">
+                <div class="empty-icon rounded-circle d-grid align-items-center mb-3" aria-hidden="true">⌁</div>
+                <h3 class="h6 fw-bold">No guesses yet</h3>
+                <p class="small mb-0">Your clues will appear here after your first attempt.</p>
+              </div>
+            {% endif %}
+
+            <div class="clue-legend mt-auto pt-4 border-top border-light border-opacity-10">
+              <p class="d-flex gap-2 small mb-2"><span class="legend-dot correct flex-shrink-0"></span><span><strong>Correct</strong> means the digit appears anywhere in the PIN.</span></p>
+              <p class="d-flex gap-2 small mb-0"><span class="legend-dot placed flex-shrink-0"></span><span><strong>Placed</strong> means it is also in the exact position.</span></p>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="text-center py-3 small">Built with Python, Flask &amp; Bootstrap <span aria-hidden="true">·</span> PinPoint</footer>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>
