@@ -2,6 +2,10 @@
 
 PinPoint is a responsive web-based PIN guessing game built with Python, Flask, Bootstrap, HTML, and CSS. The application generates a random four-digit PIN and gives users feedback after each guess.
 
+## Preview
+
+![PinPoint game interface](images/pinpoint-preview.png)
+
 ## Features
 
 - Generates a random four-digit PIN
