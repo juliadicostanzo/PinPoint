@@ -185,7 +185,8 @@ body {
 .digit {
   width: 34px;
   height: 38px;
-  background: var(--pin-paper);
+  color: #14231d;
+  background-color: #fbfaf5;
   font-family: "DM Mono", monospace;
   font-weight: 600;
   border-radius: 0.5rem;
